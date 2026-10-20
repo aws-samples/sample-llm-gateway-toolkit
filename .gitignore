@@ -1,0 +1,28 @@
+# --- Secrets / local config — NEVER commit ---
+.env
+.env.*
+!.env.example
+# Personal local overrides (e.g. gateway-local/config.yaml.local + docker-compose.override.yml)
+*.local
+docker-compose.override.yml
+
+# --- Dependencies & build artifacts ---
+node_modules/
+dist/
+cdk.out/
+cdk.context.json
+
+# --- Benchmark run outputs (agent work, traces, metrics) ---
+benchmark/workspace/output/
+
+# --- Python ---
+__pycache__/
+.ruff_cache/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+

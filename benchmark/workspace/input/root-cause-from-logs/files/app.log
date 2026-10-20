@@ -1,0 +1,21 @@
+2026-09-28T09:10:00.112Z INFO  checkout-api  startup complete version=4.12.1 db.pool.max_size=50
+2026-09-28T09:11:30.402Z INFO  checkout-api  POST /checkout 200 142ms order=A1001
+2026-09-28T09:12:10.877Z INFO  checkout-api  POST /checkout 200 131ms order=A1002
+2026-09-28T09:13:05.019Z WARN  checkout-api  redis latency p99=48ms (threshold 40ms) cache=session
+2026-09-28T09:13:44.310Z INFO  checkout-api  POST /checkout 200 156ms order=A1003
+2026-09-28T09:14:02.550Z INFO  config-agent  hot reload applied source=s3://cfg/checkout-api/prod.yaml changed_keys=[db.pool.max_size, feature.new_banner]
+2026-09-28T09:14:02.551Z INFO  checkout-api  db pool resized max_size=5 (was 50)
+2026-09-28T09:14:20.004Z INFO  checkout-api  POST /checkout 200 188ms order=A1004
+2026-09-28T09:15:01.771Z WARN  checkout-api  db pool: waiting for connection active=5 idle=0 waiters=12
+2026-09-28T09:15:03.772Z ERROR checkout-api  db pool: timeout acquiring connection after 2000ms waiters=19
+2026-09-28T09:15:03.790Z ERROR checkout-api  payment-client: deadline exceeded calling payment-service after 3000ms order=A1005
+2026-09-28T09:15:03.791Z ERROR checkout-api  POST /checkout 503 3012ms order=A1005
+2026-09-28T09:15:04.120Z WARN  checkout-api  redis latency p99=51ms (threshold 40ms) cache=session
+2026-09-28T09:15:05.330Z ERROR checkout-api  db pool: timeout acquiring connection after 2000ms waiters=27
+2026-09-28T09:15:05.341Z ERROR checkout-api  payment-client: deadline exceeded calling payment-service after 3000ms order=A1006
+2026-09-28T09:15:05.342Z ERROR checkout-api  POST /checkout 503 3009ms order=A1006
+2026-09-28T09:15:09.004Z INFO  payment-service  health ok p99=85ms
+2026-09-28T09:15:12.660Z ERROR checkout-api  db pool: timeout acquiring connection after 2000ms waiters=34
+2026-09-28T09:15:12.671Z ERROR checkout-api  POST /checkout 503 3004ms order=A1007
+2026-09-28T09:15:30.118Z WARN  checkout-api  circuit breaker OPEN target=payment-service failures=10/10
+2026-09-28T09:15:31.002Z ERROR checkout-api  POST /checkout 503 4ms order=A1008 reason=circuit_open

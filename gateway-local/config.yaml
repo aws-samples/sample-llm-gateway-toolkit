@@ -1,0 +1,110 @@
+# LiteLLM gateway — Amazon Bedrock catalogue (starter).
+#
+# Bedrock requests use your AWS credentials with SigV4 signing.
+# Anthropic models use bedrock/invoke/<id> for native streaming.
+# Other Bedrock models use bedrock/<id>.
+#
+# PRICING: LiteLLM's built-in cost map assumes us-east-1. The *_cost_per_token fields pin your real
+#   regional prices so /spend logs show correct cost (per-token = price per 1M ÷ 1e6). Update for
+#   your region. https://docs.litellm.ai/docs/proxy/custom_pricing
+#
+# ⚠️ Enable these model IDs in YOUR Bedrock region, or swap them for ones you have access to.
+#   Default region is eu-west-1 (AWS_REGION in .env); availability varies by region.
+model_list:
+
+  # Claude Sonnet 4.5 via EU cross-region inference profile
+  - model_name: claude-sonnet
+    litellm_params:
+      model: bedrock/invoke/eu.anthropic.claude-sonnet-4-5-20250929-v1:0
+      aws_region_name: eu-west-1
+
+  # Sonnet 5.5 via EU cross-region inference profile
+  - model_name: claude-sonnet-5-5
+    litellm_params:
+      model: bedrock/invoke/eu.anthropic.claude-sonnet-5-5
+      aws_region_name: eu-west-1
+
+  # Haiku 4.5 via EU cross-region inference profile.
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: bedrock/invoke/eu.anthropic.claude-haiku-4-5-20251001-v1:0
+      aws_region_name: eu-west-1
+
+  # OpenAI on Bedrock via global inference profile.
+  # May send data outside of the EU region.
+  - model_name: gpt-6.1-sol
+    litellm_params:
+      model: bedrock/global.openai.gpt-6.1-sol
+      aws_region_name: eu-west-1
+  - model_name: gpt-6-astra
+    litellm_params:
+      model: bedrock/global.openai.gpt-6-astra
+      aws_region_name: eu-west-1
+
+  # Open-weight models
+  - model_name: gpt-oss-120b
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: eu-west-1
+  - model_name: glm-4.7-flash
+    litellm_params:
+      model: bedrock/zai.glm-4.7-flash
+      aws_region_name: eu-west-1
+  - model_name: qwen3-coder-30b
+    litellm_params:
+      model: bedrock/qwen.qwen3-coder-30b-a3b-v1:0
+      aws_region_name: eu-west-1
+  - model_name: minimax-m2.5
+    litellm_params:
+      model: bedrock/minimax.minimax-m2.5
+      aws_region_name: eu-west-1
+  - model_name: gpt-5.6-luna
+    litellm_params:
+      model: bedrock/global.openai.gpt-5.6-luna
+      aws_region_name: eu-west-1
+  - model_name: gpt-5.6-terra
+    litellm_params:
+      model: bedrock/global.openai.gpt-5.6-terra
+      aws_region_name: eu-west-1
+
+  # ── Self-hosted model on a SageMaker endpoint (IAM, no token) — see ../self-hosting-cdk ──
+  # Qwen3.8-27B (Qwen/Qwen3.8-27B, Apache-2.0), fp8, 1× L40S.
+  # Thinking effort per request: extra_body chat_template_kwargs.reasoning_effort = xhigh|medium|low.
+  # Commented out: the endpoint is NOT deployed (calls would fail). Uncomment after
+  #   ../self-hosting-cdk/scripts/deploy_qwen38.py deploy     (default region eu-north-1)
+  # - model_name: qwen38-2xl-27b-fp8
+  #   litellm_params:
+  #     model: sagemaker_chat/qwen38-2xl-27b-fp8
+  #     aws_region_name: eu-north-1          # must match the region the endpoint was deployed to
+  #   model_info:
+  #     input_cost_per_second: 0.00072372  # $2.6/hr ml.g6e.2xlarge ÷ 3600
+  #     supports_streaming: true          # SageMaker has a hard 60s sync wall — STREAM long tasks
+  #     supports_function_calling: true
+  #     supports_vision: true
+
+  # ── (template) Self-hosted model on a SageMaker endpoint (IAM, no token) ──────────────
+  # Uncomment once you deploy your own endpoint (see ../self-hosting-cdk). It sits alongside the managed
+  # routes on the same OpenAI-compatible surface — clients pick managed vs self-hosted by model_name.
+  # Uses LiteLLM's BUILT-IN sagemaker_chat route — no custom handler needed. Set aws_region_name to
+  # the endpoint's region (per-route, so the gateway can be in a different region).
+  #
+  # ⚠️ STREAM long tasks. SageMaker's synchronous invoke_endpoint has a hard 60s wall; a non-streaming
+  # request for a big reasoning answer (e.g. max_tokens 8192) dies with INTERNAL_FAILURE_FROM_MODEL at
+  # ~60s. With stream:true the built-in route uses invoke_endpoint_with_response_stream — verified
+  # running >100s with no timeout, no custom handler. supports_streaming tells agent clients to stream.
+  # - model_name: my-selfhosted-model
+  #   litellm_params:
+  #     model: sagemaker_chat/<your-endpoint-name>
+  #     aws_region_name: <endpoint-region>
+  #     input_cost_per_second: 0.00072372    # $2.6/hr ml.g6e.2xlarge ÷ 3600
+  #   model_info:
+  #     supports_streaming: true
+  #     supports_function_calling: true
+
+litellm_settings:
+  telemetry: false
+  drop_params: true
+  modify_params: true
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

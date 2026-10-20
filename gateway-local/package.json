@@ -1,0 +1,13 @@
+{
+  "name": "llm-gateway-local",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prestart": "node setup.mjs",
+    "start": "docker compose up -d --wait",
+    "stop": "docker compose down"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

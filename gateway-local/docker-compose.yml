@@ -1,0 +1,56 @@
+services:
+  litellm:
+    image: litellm/litellm-database:v1.105.1@sha256:2bcadb9905b692a5ca4dadd51bccaaa23a95dc8a0f9322d9c9787f0ac2aeb50e
+    ports:
+      - "127.0.0.1:${LOCAL_PORT:-4000}:4000"
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ${AWS_CONFIG_DIR:-${HOME:-${USERPROFILE}}/.aws}:/root/.aws:ro
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env or run npm start}
+      - LITELLM_SALT_KEY=${LITELLM_SALT_KEY:?Set LITELLM_SALT_KEY in .env or run npm start}
+      - DATABASE_HOST=db:5432
+      - DATABASE_NAME=litellm
+      - DATABASE_USERNAME=litellm
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or run npm start}
+      - STORE_MODEL_IN_DB=True
+      - NO_DOCS=true
+      - NO_REDOC=true
+      - NO_OPENAPI=true
+      - AWS_REGION=${AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}
+      # Omit unset credentials; an empty AWS_PROFILE breaks profile resolution.
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_PROFILE
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/readiness', timeout=5)"
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 12
+
+  db:
+    image: postgres:16.15-bookworm@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or run npm start}
+      - POSTGRES_DB=litellm
+    volumes:
+      - litellm-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "litellm", "-d", "litellm"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  litellm-pgdata:

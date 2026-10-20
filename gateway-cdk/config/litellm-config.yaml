@@ -1,0 +1,98 @@
+# LiteLLM model catalogue — loaded from S3 by the stock image at startup (config-as-data).
+# Edit this file and re-run `cdk deploy` to upload the catalogue and replace the tasks —
+# no container rebuild. Direct S3 edits require a separate forced service deployment.
+#
+# Same format as ../../gateway-local/config.yaml (the canonical starter). This CDK copy carries the
+# same routes for the deployed stack; keep the two in sync when you add/remove models.
+#
+# Auth: these Bedrock routes use the Fargate task role (IAM), so there is no key to manage.
+# Region comes from AWS_REGION in the task environment.
+#
+# Pricing: LiteLLM's built-in cost map assumes us-east-1. Pin real per-token prices for your
+# region so /spend logs show correct cost (per-token = price per 1M ÷ 1e6). Update the numbers
+# below for your region before trusting spend figures.
+#
+# ⚠️ Inference-profile prefix must match your region: `eu.` for EU regions, `us.` for US regions.
+#   The stack defaults to eu-west-1, so the eu. prefix is used below.
+#   Enable these model IDs in your Bedrock region, or swap for ones you have.
+
+model_list:
+
+  # ── Anthropic on Bedrock (Converse route — native thinking blocks) ──────────────────
+  - model_name: claude-sonnet
+    litellm_params:
+      model: bedrock/converse/eu.anthropic.claude-sonnet-4-5-20250929-v1:0
+      # input_cost_per_token: 0.000003     # $3.00 / 1M — set for your region
+      # output_cost_per_token: 0.000015    # $15.00 / 1M
+
+  # More Anthropic on Converse (all verified in eu-west-1). Great for plain API calls; note the
+  # tool-schema quirk with agent clients like Copilot (see the openai/ routes below for those).
+  - model_name: claude-opus
+    litellm_params:
+      model: bedrock/converse/eu.anthropic.claude-opus-4-5-20251101-v1:0
+  - model_name: claude-haiku
+    litellm_params:
+      model: bedrock/converse/eu.anthropic.claude-haiku-4-5-20251001-v1:0
+
+  # OpenAI on Bedrock.
+  - model_name: gpt-6.1-sol
+    litellm_params:
+      model: bedrock/global.openai.gpt-6.1-sol
+  - model_name: gpt-6-astra
+    litellm_params:
+      model: bedrock/global.openai.gpt-6-astra
+
+  # ── Open-weight models — `bedrock/<model-id>` route (IAM, NO token) ───────────────
+  # SigV4-signs with the task role — no key to mint or rotate. GitHub Copilot works against these
+  # open-weight routes as-is (they accept Copilot's request body). Availability is regional — these
+  # are all in eu-west-1; match your deploy region.
+  # (The `openai/` + api_base form would demand a short-lived bearer token — avoided here.)
+  - model_name: glm-4.7-flash
+    litellm_params:
+      model: bedrock/zai.glm-4.7-flash
+      aws_region_name: eu-west-1
+  - model_name: gpt-oss-120b
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: eu-west-1
+  - model_name: qwen3-coder-30b
+    litellm_params:
+      model: bedrock/qwen.qwen3-coder-30b-a3b-v1:0
+      aws_region_name: eu-west-1
+  - model_name: minimax-m2.5
+    litellm_params:
+      model: bedrock/minimax.minimax-m2.5
+      aws_region_name: eu-west-1
+
+  # ── Self-hosted model on a SageMaker endpoint (IAM, no token) ─────────────────────────
+  # Uncomment once you deploy your own endpoint (see ../self-hosting-cdk). It sits alongside the managed
+  # routes on the same OpenAI-compatible surface — clients pick by model_name. Set aws_region_name to
+  # the endpoint's region (per-route). The task role needs sagemaker:InvokeEndpoint(+WithResponseStream)
+  # — granted when its ARN is supplied in sagemakerEndpointArns in bin/gateway.ts.
+  # ⚠️ STREAM long tasks: SageMaker's synchronous invoke has a hard 60s wall; a non-streaming big
+  # reasoning answer (max_tokens 8192) dies at ~60s. stream:true uses the streaming invoke — no
+  # timeout, no custom handler. supports_streaming tells agent clients to stream.
+  # - model_name: my-selfhosted-model
+  #   litellm_params:
+  #     model: sagemaker_chat/<your-endpoint-name>
+  #     aws_region_name: <endpoint-region>
+  #   model_info:
+  #     input_cost_per_second: 0.00072372  # $2.6/hr ml.g6e.2xlarge ÷ 3600
+  #     supports_streaming: true
+  #     supports_function_calling: true
+  # - model_name: qwen38-2xl-27b-fp8
+  #   litellm_params:
+  #     model: sagemaker_chat/qwen38-2xl-27b-fp8
+  #     aws_region_name: eu-north-1
+  #   model_info:
+  #     input_cost_per_second: 0.00072372  # $2.6/hr ml.g6e.2xlarge ÷ 3600
+  #     supports_streaming: true
+  #     supports_function_calling: true
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  # LiteLLM reads the master key and DB connection (DATABASE_HOST/_USERNAME/_PASSWORD/_NAME) from the
+  # task environment (set by the CDK stack; credentials injected from Secrets Manager).
+  master_key: os.environ/LITELLM_MASTER_KEY

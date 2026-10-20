@@ -1,0 +1,51 @@
+{
+  "name": "gateway-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "gateway": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "vendor"
+  ],
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "scripts": {
+    "start": "node src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "bundle:plugin": "node scripts/bundle-plugin.ts",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "prepare": "npm run build && npm run bundle:plugin"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": false,
+    "msgpackr-extract@3.0.4": true
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "3.1152.0",
+    "@aws-sdk/client-ecs": "3.1152.0",
+    "@aws-sdk/client-ssm": "3.1152.0",
+    "@inquirer/input": "5.1.7",
+    "@inquirer/password": "5.2.3",
+    "@napi-rs/keyring": "2.1.1",
+    "commander": "15.0.0",
+    "execa": "10.1.1",
+    "open": "11.0.4",
+    "openid-client": "6.8.8",
+    "proper-lockfile": "4.1.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "1.19.3",
+    "@types/node": "26.6.5",
+    "@types/proper-lockfile": "4.1.4",
+    "fflate": "0.8.3",
+    "tar": "7.5.22",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

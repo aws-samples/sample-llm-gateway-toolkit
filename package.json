@@ -1,0 +1,11 @@
+{
+  "name": "llm-gateway-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bootstrap": "npm --prefix gateway-cdk run bootstrap --",
+    "deploy": "npm --prefix gateway-cdk run deploy --",
+    "destroy": "npm --prefix gateway-cdk run destroy --",
+    "install-gateway-cli": "cd tools/gateway-cli && npm ci && npm link --ignore-scripts"
+  }
+}
